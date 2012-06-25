@@ -21,7 +21,7 @@ import de.mpg.eva.mapping.Mapping;
 import de.mpg.eva.mapping.VocabularyMappingParser;
 import de.mpg.eva.utils.IConstants;
 
-class Connector {
+public class Connector {
 
 	private FileMakerConnector fileMakerConnector = null;
 	private VocabularyMappingParser parser = null;
