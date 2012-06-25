@@ -53,8 +53,9 @@ public class FileMakerConnector {
 		String query = "SELECT ";
 
 		// iterate over columns to build query
+		// columns can contain a column with the tables name. discard it
 		for (String column : columns)
-			query += column + ",";
+			if(!column.equals(table)) query += column + ",";
 
 		// delete last ',' and add table
 		query = query.substring(0, query.length() - 1);

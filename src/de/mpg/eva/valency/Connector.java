@@ -74,7 +74,7 @@ class Connector {
 			// get id from db by querying primaryKey
 			String primaryKey = tableMapping.getPrimary();
 			System.out.println("PR :" + primaryKey + "\n");
-			int id = 0;
+			String id = "";
 			object.setId(id);
 
 			for (String column : tableMapping.getColumns()) {
@@ -83,17 +83,22 @@ class Connector {
 				String value = "query this from db";
 				object.setFieldValue(column, value);
 			}
-			for (ForeignKeyRelation rel : tableMapping.getForeignRelations()) {
-				// this is the name of another table. Primary is identical to
-				// table before, foreignKey is the value we want to get.
-				String foreignTable = rel.getTable();
-				String primary = rel.getPrimary();
-				String foreignKey = rel.getForeign();
-				// query the foreign table
-				String value = "query the value of the foreignKey in table foreignTable where id=primary";
-				object.setFieldValue(foreignKey, value);
+			if(tableMapping.getForeignRelations()!=null) {
+				for (ForeignKeyRelation rel : tableMapping.getForeignRelations()) {
+					// this is the name of another table. Primary is identical to
+					// table before, foreignKey is the value we want to get.
+					String foreignTable = rel.getTable();
+					String primary = rel.getPrimary();
+					String foreignKey = rel.getForeign();
+					// query the foreign table
+					System.out.println(foreignTable);
+					System.out.println(primary);
+					System.out.println(foreignKey);
+					String value = "query the value of the foreignKey in table foreignTable where id=primary";
+					object.setFieldValue(foreignKey, value);
+				}
 			}
-			fmToJava.addObject(object);
+			fmToJava.addObject(object, dbTable);
 		}
 		ValencyJenaModel modelMaker = new ValencyJenaModel(fmToJava, parser,
 				defModel);
