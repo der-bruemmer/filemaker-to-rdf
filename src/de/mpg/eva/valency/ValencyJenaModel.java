@@ -1,7 +1,7 @@
 package de.mpg.eva.valency;
 
 /**
- * @author Martin Brümmer
+ * @author Martin Brï¿½mmer
  */
 
 import java.util.Map;
