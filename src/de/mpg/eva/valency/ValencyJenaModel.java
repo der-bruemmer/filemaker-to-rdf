@@ -51,34 +51,46 @@ public class ValencyJenaModel {
 					if(obj.getFieldValueByName(field)!=null) {
 						res.addProperty(resProp.getProperty(), makeUri(resProp.getResourceUri(),obj.getFieldValueByName(field)));
 					} 
-					else System.out.println("Field not found: " + field);
+					else {
+						System.out.println("[WARNING] No properties added vor field " + field + " of " + map.getTable());
+					}
 				}
 				else res.addProperty(resProp.getProperty(),resProp.getResourceUri());
 			}
+		}
+		for(String field : map.getProperties().keySet()) {	
 			for(Property prop : map.getProperties().get(field)) {
 				if(obj.getFieldValueByName(field)!=null) {
 					res.addLiteral(prop, obj.getFieldValueByName(field));
 				}
-				else System.out.println("Field not found: " + field);
+				else {
+					System.out.println("[WARNING] No literals added for field " + field + " of " + map.getTable());
+				}
 			}
 		}
-		for(ForeignKeyRelation rel : map.getForeignRelations()) {
-			String field = rel.getForeign();
-			for(ResourceProperty resProp : rel.getResources()) {
-				String uri = resProp.getResourceUri();
-				if(containsFieldValue(uri, field)) {
+		if(map.getForeignRelations()!=null) {
+			for(ForeignKeyRelation rel : map.getForeignRelations()) {
+				String field = rel.getForeign();
+				for(ResourceProperty resProp : rel.getResources()) {
+					String uri = resProp.getResourceUri();
+					if(containsFieldValue(uri, field)) {
+						if(obj.getFieldValueByName(field)!=null) {
+							res.addProperty(resProp.getProperty(), makeUri(resProp.getResourceUri(),obj.getFieldValueByName(field)));
+						} 
+						else {
+							System.out.println("[WARNING] No foreignkey properties added for field " + field + " of " + map.getTable());
+						}
+					}
+					else res.addProperty(resProp.getProperty(),resProp.getResourceUri());
+				}
+				for(Property prop : rel.getProperties()) {
 					if(obj.getFieldValueByName(field)!=null) {
-						res.addProperty(resProp.getProperty(), makeUri(resProp.getResourceUri(),obj.getFieldValueByName(field)));
-					} 
-					else System.out.println("Field not found: " + field);
+						res.addLiteral(prop, obj.getFieldValueByName(field));
+					}
+					else {
+						System.out.println("[WARNING] No foreignkey literals added for field " + field + " of " + map.getTable());
+					}
 				}
-				else res.addProperty(resProp.getProperty(),resProp.getResourceUri());
-			}
-			for(Property prop : rel.getProperties()) {
-				if(obj.getFieldValueByName(field)!=null) {
-					res.addLiteral(prop, obj.getFieldValueByName(field));
-				}
-				else System.out.println("Field not found: " + field);
 			}
 		}
 	}
