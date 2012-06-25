@@ -20,6 +20,7 @@ public class Mapping {
 	private List<ForeignKeyRelation> foreignRelations;
 	private String baseUri;
 	private String primaryKey;
+	private String table;
 	
 	public Mapping(Model model){
 		this.jenaModel = model;
@@ -98,6 +99,14 @@ public class Mapping {
 		return baseUri;
 	}
 	
+	public String getTable() {
+		return table;
+	}
+
+	public void setTable(String table) {
+		this.table = table;
+	}
+
 	public void setPrimary(String primary) {
 		this.primaryKey = primary;
 	}
