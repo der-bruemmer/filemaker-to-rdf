@@ -5,12 +5,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
+import de.mpg.eva.fm2j.FileMakerConnector;
 import de.mpg.eva.mapping.ForeignKeyRelation;
 import de.mpg.eva.mapping.Mapping;
 import de.mpg.eva.mapping.VocabularyMappingParser;
@@ -18,6 +23,7 @@ import de.mpg.eva.utils.IConstants;
 
 class Connector {
 
+	private FileMakerConnector fileMakerConnector = null;
 	private VocabularyMappingParser parser = null;
 	private Model defModel = null;
 
@@ -27,18 +33,25 @@ class Connector {
 	private String mappingFile = null;
 
 	public Connector(String filemakerURL, String filemakerUser,
-			String fileMakerPassword, String mappingFile) {
-		System.out.println(mappingFile);
+			String filemakerPassword, String mappingFile) {
+
 		this.filemakerURL = filemakerURL;
 		this.filemakerUser = filemakerUser;
-		this.fileMakerPassword = fileMakerPassword;
+		this.fileMakerPassword = filemakerPassword;
 		this.mappingFile = mappingFile;
 
+		fileMakerConnector = new FileMakerConnector(filemakerURL,
+				filemakerUser, filemakerPassword);
 		defModel = ModelFactory.createDefaultModel();
 		parser = new VocabularyMappingParser(defModel, new File(mappingFile));
 
-		getValencyJenaModel();
-
+		try {
+			getValencyJenaModel();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("finished");
 	}
 
 	/**
@@ -53,49 +66,84 @@ class Connector {
 	 * verweisen auf eine andere Tabelle (siehe inline kommentare)
 	 * 
 	 * @return
+	 * @throws SQLException
 	 */
 
-	public Model getValencyJenaModel() {
+	public Model getValencyJenaModel() throws SQLException {
 
 		// filepath should go in external file
 
 		// keys of the map are db tables
 		Map<String, Mapping> map = parser.getValencyMapping();
 		FileMakerToJavaObjects fmToJava = new FileMakerToJavaObjects();
-		for (String dbTable : map.keySet()) {
-			System.out.println("table: " + dbTable);
-			Mapping tableMapping = map.get(dbTable);
-			if (tableMapping == null) {
-				System.out.println("Null");
-			}
-			// this is obviously wrong, because there is more than one object in
-			// each table
-			ValencyDbObject object = new ValencyDbObject();
-			// get id from db by querying primaryKey
-			String primaryKey = tableMapping.getPrimary();
-			System.out.println("PR :" + primaryKey + "\n");
-			String id = "";
-			object.setId(id);
+		List<String> columns;
 
-			for (String column : tableMapping.getColumns()) {
-				// these are the columns of the table which are needed in the
-				// object
-				String value = "query this from db";
-				object.setFieldValue(column, value);
-			}
-			if(tableMapping.getForeignRelations()!=null) {
-				for (ForeignKeyRelation rel : tableMapping.getForeignRelations()) {
-					// this is the name of another table. Primary is identical to
-					// table before, foreignKey is the value we want to get.
-					String foreignTable = rel.getTable();
-					String primary = rel.getPrimary();
-					String foreignKey = rel.getForeign();
-					// query the foreign table
-					System.out.println(foreignTable);
-					System.out.println(primary);
-					System.out.println(foreignKey);
-					String value = "query the value of the foreignKey in table foreignTable where id=primary";
-					object.setFieldValue(foreignKey, value);
+		ResultSet rsPrim = null;
+
+		for (String dbTable : map.keySet()) {
+
+			Mapping tableMapping = map.get(dbTable);
+			ValencyDbObject object = null;
+
+			columns = new ArrayList<String>(tableMapping.getColumns());
+			columns.add(tableMapping.getPrimary());
+
+			rsPrim = fileMakerConnector.getTable(dbTable, columns);
+			while (rsPrim.next()) {
+
+				ResultSet rsForeign = null;
+
+				// this is obviously wrong, because there is more than one
+				// object in
+				// each table
+				object = new ValencyDbObject();
+				// get id from db by querying primaryKey
+				String id = rsPrim.getString(tableMapping.getPrimary());
+				object.setId(id);
+
+				for (String column : tableMapping.getColumns()) {
+					// these are the columns of the table which are needed in
+					// the
+					// object
+
+					// String value = "query this from db";
+					if (!column.equals(dbTable))
+						object.setFieldValue(column, rsPrim.getString(column));
+				}
+				if (tableMapping.getForeignRelations() != null) {
+					for (ForeignKeyRelation rel : tableMapping
+							.getForeignRelations()) {
+
+						String foreignTable = rel.getTable();
+						String primary = rel.getPrimary();
+						String foreignKey = rel.getForeign();
+
+						rsForeign = fileMakerConnector.getTable("SELECT "
+								+ "\"" + foreignKey + "\"" + " FROM "
+								+ foreignTable + " WHERE " + primary + " = "
+								+ id);
+
+						while (rsForeign.next()) {
+							object.setFieldValue(foreignKey,
+									rsForeign.getString(foreignKey));
+						}
+
+						// this is the name of another table. Primary is
+						// identical
+						// to
+						// table before, foreignKey is the value we want to get.
+						// String foreignTable = rel.getTable();
+						// String primary = rel.getPrimary();
+						// String foreignKey = rel.getForeign();
+						// query the foreign table
+						// System.out.println(foreignTable);
+						// System.out.println(primary);
+						// System.out.println(foreignKey);
+						// String value =
+						// "query the value of the foreignKey in table foreignTable where id=primary";
+						// object.setFieldValue(foreignKey,
+						// rsPrim.getString(foreignKey));
+					}
 				}
 			}
 			fmToJava.addObject(object, dbTable);
@@ -104,6 +152,7 @@ class Connector {
 				defModel);
 		defModel = modelMaker.fillJenaModel();
 		return defModel;
+		// return null;
 	}
 
 	public static void main(String[] args) {

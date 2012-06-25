@@ -12,11 +12,14 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
 
+import com.hp.hpl.jena.graph.query.Query;
+
 public class FileMakerConnector {
 
 	private Connection conFileMaker = null;
 
-	public FileMakerConnector(String filemakerURL, String user, String password) {
+	public FileMakerConnector(String filemakerURL, String filemakerUser,
+			String filemakerPassword) {
 
 		// register JDBC client driver
 		try {
@@ -33,10 +36,10 @@ public class FileMakerConnector {
 		}
 
 		try {
-			conFileMaker = DriverManager.getConnection(filemakerURL, user,
-					password);
+			conFileMaker = DriverManager.getConnection(filemakerURL,
+					filemakerUser, filemakerPassword);
 
-			conFileMaker.close();
+			// conFileMaker.close();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -55,7 +58,8 @@ public class FileMakerConnector {
 		// iterate over columns to build query
 		// columns can contain a column with the tables name. discard it
 		for (String column : columns)
-			if(!column.equals(table)) query += column + ",";
+			if (!column.equals(table))
+				query += "\"" + column + "\"" + ",";
 
 		// delete last ',' and add table
 		query = query.substring(0, query.length() - 1);
@@ -75,7 +79,63 @@ public class FileMakerConnector {
 
 	}
 
-	public static void main(String[] args) {
+	public ResultSet getTable(String query) {
+
+		ResultSet rs = null;
+		Statement st = null;
+
+		try {
+
+			st = conFileMaker.createStatement();
+			rs = st.executeQuery(query);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return rs;
+
+	}
+
+	public ResultSet getTable(String table, List<String> columns,
+			String whereClause) {
+
+		if (columns == null || columns.size() <= 0)
+			return null;
+
+		if (whereClause == null || whereClause.isEmpty())
+			return getTable(table, columns);
+
+		ResultSet rs = null;
+		Statement st = null;
+		String query = "SELECT ";
+
+		// iterate over columns to build query
+		// columns can contain a column with the tables name. discard it
+		for (String column : columns)
+			if (!column.equals(table))
+				query += "\"" + column + "\"" + ",";
+
+		// delete last ',' and add table
+		query = query.substring(0, query.length() - 1);
+		query += " FROM " + table + " " + whereClause;
+
+		try {
+
+			st = conFileMaker.createStatement();
+			rs = st.executeQuery(query);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+
+		return rs;
+
+	}
+
+	public static void main(String[] args) throws SQLException {
 
 		String filemakerURL = null;
 		String user = null;
@@ -113,6 +173,13 @@ public class FileMakerConnector {
 
 		FileMakerConnector connector = new FileMakerConnector(filemakerURL,
 				user, password);
+		String q = "SELECT \"Example_ID\" FROM Verb_Examples WHERE Verb_ID = 1";
+		ResultSet rs = connector.getTable(q);
+		while (rs.next()) {
+
+//			System.out.println(rs.getString(0));
+
+		}
 
 	}
 }
