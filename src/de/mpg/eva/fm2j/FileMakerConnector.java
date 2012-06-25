@@ -99,8 +99,8 @@ public class FileMakerConnector {
 				stream.close();
 
 				filemakerURL = properties.getProperty("filemakerURL");
-				user = properties.getProperty("user");
-				password = properties.getProperty("password");
+				user = properties.getProperty("filemakerUser");
+				password = properties.getProperty("filemakerpassword");
 
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
