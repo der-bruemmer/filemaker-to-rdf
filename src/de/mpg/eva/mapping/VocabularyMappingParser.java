@@ -64,20 +64,19 @@ public class VocabularyMappingParser {
 			    domFactory.setNamespaceAware(true);
 			    DocumentBuilder builder = domFactory.newDocumentBuilder();
 			    Document doc = builder.parse(this.mappingFile);
-			    NodeList valencyNodes = this.getNodesByPath(doc, "//valency");
+			    NodeList valencyNodes = this.getNodesByPath(doc, "//valency//table");
 			  
 			    //for every node of the corresponding mapping
 			    for(int nNumber=0; nNumber<valencyNodes.getLength(); nNumber++) {
 			    	Node valNode = valencyNodes.item(nNumber);
 			    	//if the node is an element and describes a table
-			    	
 			    	if(valNode.getNodeType() == Node.ELEMENT_NODE) {
 			    		//make a new mapping for the table
 			    		Mapping objMapping = new Mapping(this.jenaModel);
 			    		//traverse recursively from the first childnode of the table element to get the mapping  		
 			    		this.traverseDomFromNode(valNode, objMapping);
 			    		//add mapping to mapping map (wtf am i doing?!)
-			    		valencyMapping.put(valNode.getNodeName(), objMapping);
+			    		valencyMapping.put(objMapping.getTable(), objMapping);
 			    	}
 			    }
 		    } catch(Exception e) {
@@ -101,7 +100,10 @@ public class VocabularyMappingParser {
 		if(parent.hasChildNodes()) {
 			NodeList childNodes = parent.getChildNodes();
 			//uri of the resource is set here
-			if(parent.getNodeName().equals("URI")) {
+			if(parent.getNodeName().equals("table")) {
+				mapping.setTable(parent.getChildNodes().item(1).getNodeName());
+			}
+			else if(parent.getNodeName().equals("URI")) {
 				mapping.setUri(parent.getFirstChild().getTextContent().trim());
 			}
 			else if(parent.getNodeName().equals("primary")) {
@@ -112,7 +114,7 @@ public class VocabularyMappingParser {
 			//ResourceProperty is initialized in mapping.addResource method
 			//it is simultaniously added to mapping.columns
 			else if(parent.getNodeName().equals("resource") && 
-					!parent.getParentNode().getParentNode().getParentNode().getNodeName().equals("foreign")) {
+					!parent.getParentNode().getParentNode().getNodeName().equals("foreign")) {
 				String prop=parent.getChildNodes().item(1).getTextContent().trim();
 				String uri=parent.getChildNodes().item(3).getTextContent().trim();
 				mapping.addResource(parent.getParentNode().getNodeName(), prop, uri);
@@ -202,9 +204,10 @@ public class VocabularyMappingParser {
 		Model defModel = ModelFactory.createDefaultModel();
 		VocabularyMappingParser parser = new VocabularyMappingParser(defModel, mappingFile);
 		for(Mapping map : parser.getValencyMapping().values()) {
-//			System.out.println(map.getUri());
-//			System.out.println(map.getResourcesString()+"\n");
-//			System.out.println(map.getPropertiesString()+"\n");
+			System.out.println(map.getUri());
+			System.out.println(map.getTable());
+			System.out.println(map.getResourcesString()+"\n");
+			System.out.println(map.getPropertiesString()+"\n");
 //			for(ForeignKeyRelation f : map.getForeignRelations()) {
 //				System.out.println(f.getTable());
 //				System.out.println(f.getPrimary());
