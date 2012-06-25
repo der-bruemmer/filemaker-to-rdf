@@ -1,5 +1,9 @@
 package de.mpg.eva.valency;
 
+/**
+ * @author Martin Brümmer
+ */
+
 import java.util.Map;
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -25,13 +29,17 @@ public class ValencyJenaModel {
 	}
 	
 	public Model fillJenaModel() {
-		Map<Integer, ValencyDbObject> objects = this.objects.getObjectMap();
-		Mapping langMapping = this.valencyMapping.get("languages");
-		for(ValencyDbObject obj : objects.values()) {
-			String resourceUri = makeUri(langMapping.getUri(), String.valueOf(obj.getId()));
-			Resource langResource = jenaModel.createResource(resourceUri);
-			this.addPropertiesAndResources(langResource, langMapping, obj);	
+		Map<String,Map<String, ValencyDbObject>> objects = this.objects.getAllObjects();
+		for(String table : objects.keySet()) {
+			Mapping langMapping = this.valencyMapping.get(table);
+			for(ValencyDbObject obj : objects.get(table).values()) {
+				String resourceUri = makeUri(langMapping.getUri(), obj.getId());
+				Resource langResource = jenaModel.createResource(resourceUri);
+				this.addPropertiesAndResources(langResource, langMapping, obj);	
+			}
 		}
+		
+		
 		return this.jenaModel;
 	}
 	

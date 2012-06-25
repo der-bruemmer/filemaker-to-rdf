@@ -1,5 +1,9 @@
 package de.mpg.eva.mapping;
 
+/**
+ * @author Martin Brümmer
+ */
+
 import com.hp.hpl.jena.rdf.model.Property;
 
 public class ResourceProperty {

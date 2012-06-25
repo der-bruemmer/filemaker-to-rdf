@@ -1,11 +1,15 @@
 package de.mpg.eva.valency;
 
+/**
+ * @author Martin Brümmer
+ */
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class ValencyDbObject {
 	
-	private int id;	
+	private String id;	
 	private Map<String, String> fieldValues;
 	
 	public ValencyDbObject() {
@@ -22,16 +26,16 @@ public class ValencyDbObject {
 		this.fieldValues.put(fieldname, value);
 	}
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	
 	public boolean equals(ValencyDbObject object){
-		return (this.id==object.getId()) ? true : false;
+		return (this.id.equals(object.getId())) ? true : false;
 	}
 	
 	public String toString(){

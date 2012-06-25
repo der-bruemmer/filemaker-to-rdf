@@ -1,5 +1,9 @@
 package de.mpg.eva.mapping;
 
+/**
+ * @author Martin Brümmer
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 

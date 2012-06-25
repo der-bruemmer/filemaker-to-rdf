@@ -6,31 +6,38 @@ import java.util.Map;
 /**
  * This Class serves to build Maps of Java Objects from the Valency FileMaker Database
  * 
- * Because of the internal structure of the database, it would be best to create Languages first,
- * then Meanings (every Meaning has a Language field), 
- * then Examples (every Example has a Language field),
- * then Verbs (every Verb has a List of Examples and Meanings and a Language field)
- * 
  * @author Martin Brümmer
  */
 
 public class FileMakerToJavaObjects {
 
-	private Map<Integer, ValencyDbObject> objects;
+	private Map<String,Map<String, ValencyDbObject>> objects;
 	
 	public FileMakerToJavaObjects() {
-		this.objects = new HashMap<Integer,ValencyDbObject>();
+		this.objects = new HashMap<String,Map<String, ValencyDbObject>>();
 	}
 	
-	public void addObject(ValencyDbObject object) {
-		this.objects.put(object.getId(), object);
+	public void addObject(ValencyDbObject object, String table) {
+		if(this.objects.containsKey(table)) {
+			Map<String, ValencyDbObject> map = this.objects.get(table);
+			map.put(object.getId(), object);
+		} else {
+			Map<String, ValencyDbObject> map = new HashMap<String, ValencyDbObject>();
+			map.put(object.getId(), object);
+			this.objects.put(table, map);
+		}
+		
 	}
 	
-	public ValencyDbObject getObjectById(int id) {
-		return this.objects.get(id);
+	public ValencyDbObject getObjectById(String id, String table) {
+		return this.objects.get(table).get(id);
 	}
 	
-	public Map<Integer, ValencyDbObject> getObjectMap() {
+	public Map<String, ValencyDbObject> getObjectMap(String table) {
+		return this.objects.get(table);
+	}
+	
+	public Map<String,Map<String, ValencyDbObject>> getAllObjects() {
 		return this.objects;
 	}
 	
