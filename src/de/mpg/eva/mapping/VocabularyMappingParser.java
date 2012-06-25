@@ -107,7 +107,6 @@ public class VocabularyMappingParser {
 			else if(parent.getNodeName().equals("primary")) {
 				//name of the nodes child is primary key
 				mapping.setPrimary(parent.getChildNodes().item(1).getNodeName());
-				System.out.println(parent.getChildNodes().item(1).getNodeName());
 			}
 			//resources are added into a Map<String, ResourceProperty>
 			//ResourceProperty is initialized in mapping.addResource method
@@ -147,10 +146,10 @@ public class VocabularyMappingParser {
 		//start with childnodes of <foreign>
 		for(int fNodeNumber = 0; fNodeNumber<parent.getChildNodes().getLength(); fNodeNumber++) {
 			//new relation for every tuple of foreign table, primary, foreignkey
-			ForeignKeyRelation rel = new ForeignKeyRelation();
-			rel.setTable(parent.getAttributes().getNamedItem("table").getTextContent());
 			Node fNode = parent.getChildNodes().item(fNodeNumber);
 			if(fNode.getNodeType() == Node.ELEMENT_NODE) {
+				ForeignKeyRelation rel = new ForeignKeyRelation();
+				rel.setTable(parent.getAttributes().getNamedItem("table").getTextContent());
 				//<column> element with attributes primary and foreign
 				rel.setPrimary(fNode.getAttributes().getNamedItem("primary").getTextContent());
 				rel.setForeign(fNode.getAttributes().getNamedItem("foreign").getTextContent());
@@ -177,8 +176,9 @@ public class VocabularyMappingParser {
 						}
 					}
 				}
+				foreigns.add(rel);
 			}
-			foreigns.add(rel);
+			
 		}
 		return foreigns;
 	}
